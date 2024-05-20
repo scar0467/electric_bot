@@ -57,11 +57,17 @@ def write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch):
             sutochn=int(pokazaniya) - int(available_tables[0][1])
             delta = int(pokazaniya) - int(available_tables[0][1]) - int(available_tables[0][2])
             print(delta)
+            if delta < 1:
+                text=f"""<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии не должен быть меньше или ровняться нулю.
+            """
+                return text
+
             print(date_otch,available_tables[0][0])
             cursor.execute(f'INSERT INTO `{relevant_table}` (Показание,Расход_за_сутки, Дата, Дата_время, Плательщик, Способ) VALUES (?, ?, ?, ?, ?,?)', (pokazaniya, sutochn,date_otch, date_time_otch,df_dog.iloc[0]['Плательщик'], df_dog.iloc[0]['Способ']))
             connection.commit()
             try:
                 procent=round(((sutochn-int(available_tables[0][2]))/int(available_tables[0][2]))*100, 1)
+
 
             except ZeroDivisionError:
                 text="""В дальнешем, когда у меня будет больше информации, в ответ на Ваше сообщение я буду отправлять Вам информацию о количестве кВт израсходованных за смену и
