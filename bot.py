@@ -10,7 +10,7 @@ from conn import connection
 import sqlite3
 import time
 import locale
-from token import token_bot
+from token1 import token_bot
 
 locale.setlocale(locale.LC_ALL, 'Russian_Russia.1251')
 
