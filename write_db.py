@@ -4,7 +4,7 @@ import re
 import sqlite3
 import  time
 import locale
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 #from bot import inf_to_bot
 
 
