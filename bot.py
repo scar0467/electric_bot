@@ -21,7 +21,7 @@ df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС
 ls_id = df_dog['Инд_телеграм'].to_list()
 print(ls_id)
 
-#bot = telebot.TeleBot('7074243473:AAGjmusiFFRL4z6E7suueIlaKS2ypBBD0mk')
+
 bot = telebot.TeleBot(token_bot)
 
 
