@@ -76,9 +76,10 @@ def write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch):
             """
                 return text
             elif sutochn > median * 2:
-                text=f"""<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии за смену превышает среднестатистический, более чем в {int(sutochn/median)} раза.
-            """
-                return text
+                text = "подтверждение"
+            #     text=f"""<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии за смену превышает среднестатистический, более чем в {int(sutochn/median)} раза.
+            # """
+                return text, sutochn, median
 
 
             print(date_otch,available_tables[0][0])
