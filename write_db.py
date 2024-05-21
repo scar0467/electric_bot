@@ -45,9 +45,17 @@ def write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch):
                     )
                     ''')
 
-    cursor.execute(f"SELECT Дата, Показание, Расход_за_сутки, Дата_время  FROM '{relevant_table}' ORDER BY `Дата` DESC LIMIT 1")
+    cursor.execute(f"SELECT Дата, Показание, Расход_за_сутки, Дата_время  FROM '{relevant_table}' ORDER BY `Дата` DESC LIMIT 30")
     available_tables= cursor.fetchall()
     print(available_tables)
+
+
+    _sum = 0
+    for i in available_tables:
+        _sum += int(i[2])
+    median = _sum//len(available_tables)
+
+
     # date_otch=time.strftime('%x')
     # date_time_otch=time.strftime('%c')
 
@@ -58,12 +66,23 @@ def write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch):
             sutochn=int(pokazaniya) - int(available_tables[0][1])
             delta = int(pokazaniya) - int(available_tables[0][1]) - int(available_tables[0][2])
             print(delta)
+
             # if delta < 1:
             #     text=f"""<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии не должен быть меньше или ровняться нулю.
             # """
-            #     return text
+            #     return te
+            if sutochn < 1:
+                text=f"""<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии не должен быть меньше или ровняться нулю.
+            """
+                return text
+            elif sutochn > median * 2:
+                text=f"""<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии за смену превышает среднестатистический, более чем в {int(sutochn/median)} раза.
+            """
+                return text
+
+
             print(date_otch,available_tables[0][0])
-            cursor.execute(f'INSERT INTO `{relevant_table}` (Показание,Расход_за_сутки, Дата, Дата_время, Плательщик, Способ) VALUES (?, ?, ?, ?, ?,?)', (pokazaniya, sutochn,date_otch, date_time_otch,df_dog.iloc[0]['Плательщик'], df_dog.iloc[0]['Способ']))
+            cursor.execute(f'INSERT INTO `{relevant_table}` (Показание,Расход_за_сутки, Дата, Дата_время, Плательщик, Способ) VALUES (?, ?, ?, ?, ?,?)', (int(pokazaniya), sutochn,date_otch, date_time_otch,df_dog.iloc[0]['Плательщик'], df_dog.iloc[0]['Способ']))
             connection.commit()
             try:
                 procent=round(((sutochn-int(available_tables[0][2]))/int(available_tables[0][2]))*100, 1)

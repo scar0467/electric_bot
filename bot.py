@@ -9,6 +9,7 @@ from write_db import write,num_azs
 from conn import connection
 import sqlite3
 import time
+import datetime
 import locale
 from token1 import token_bot
 
@@ -38,7 +39,7 @@ def start_message(message):
         ls_id = df_dog['Инд_телеграм'].to_list()
         print(ls_id)
         if str(message.from_user.id) in ls_id:
-            bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно. Можете отправлять показания счётчика\n',parse_mode='html')
+            bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно.\n',parse_mode='html')
         else:
             bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Ваш аккаунт не авторизован. Вход запрещён\n',parse_mode='html')
     except IndexError: #sqlite3.OperationalError:
@@ -59,13 +60,22 @@ def start_message(message):
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
     global text
+
+
+    if datetime.date.fromtimestamp(message.date) < datetime.date(2024,5,21):
+        bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, показание приборов можно будет отправлять с 01.07.2024\n',parse_mode='html')
+
+    else:
+        legal_date(message)
+
+def legal_date(message):
     df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
     ls_id = df_dog['Инд_телеграм'].to_list()
     #bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно. Можете отправлять показания счётчика\n',parse_mode='html')
     if str(message.from_user.id) in ls_id:
         name_user = message.from_user.first_name
         id_user = message.from_user.id
-        pokazaniya = message.text
+        pokazaniya = round(float(message.text.replace(',','.')),1)
         date_otch=time.strftime('%d.%m.%Y',time.localtime(message.date))
         date_time_otch=time.strftime('%d.%m.%Y %H:%M:%S',time.localtime(message.date))
 
