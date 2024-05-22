@@ -21,7 +21,7 @@ df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС
 ls_id = df_dog['Инд_телеграм'].to_list()
 print(ls_id)
 
-#bot = telebot.TeleBot('7074243473:AAGjmusiFFRL4z6E7suueIlaKS2ypBBD0mk')
+
 bot = telebot.TeleBot(token_bot)
 
 
@@ -64,9 +64,12 @@ def handle_text(message):
 
     if datetime.date.fromtimestamp(message.date) < datetime.date(2024,5,21):
         bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, показание приборов можно будет отправлять с 01.07.2024\n',parse_mode='html')
+    elif text == "превышение":
+        message_button()
 
     else:
         legal_date(message)
+
 
 def legal_date(message):
     df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
@@ -102,7 +105,8 @@ def legal_date(message):
 
     #bot.send_message(message.chat.id, (message.text, message.from_user.first_name))
     #bot.send_message(message.chat.id, getwiki(message.text))
-
+def message_button():
+    print("OK")
 #print(date_time_otch)
 
 #@bot.message_handler(func=lambda message: True)
