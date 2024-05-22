@@ -67,6 +67,7 @@ def handle_text(message):
     elif text == "превышение":
         message_button()
 
+
     else:
         legal_date(message)
 
@@ -85,14 +86,17 @@ def legal_date(message):
         print(name_user,id_user,pokazaniya,date_otch,date_time_otch)
         text=write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch)
         print(text)
-        try:
-            bot.send_message(message.chat.id,text,parse_mode='html')
+        if text[0]=="подтверждение":
+            message_button(message,text)
+        else:
+            try:
+                bot.send_message(message.chat.id,text,parse_mode='html')
 
-        except telebot.apihelper.ApiTelegramException:
+            except telebot.apihelper.ApiTelegramException:
 
-            bot.send_message(message.chat.id,f"""<b>{message.from_user.first_name}</b>,
-в дальнешем, когда у меня будет больше информации, в ответ на Ваше сообщение я буду отправлять Вам информацию о количестве кВт израсходованных за смену и
-инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии в сравнение с предыдущей сменой.\n""",parse_mode='html')
+                bot.send_message(message.chat.id,f"""<b>{message.from_user.first_name}</b>,
+    в дальнешем, когда у меня будет больше информации, в ответ на Ваше сообщение я буду отправлять Вам информацию о количестве кВт израсходованных за смену и
+    инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии в сравнение с предыдущей сменой.\n""",parse_mode='html')
 
         #write(name_user,id_user,pokazaniya,df_dog)
         #inf_to_bot(write(name_user,id_user,pokazaniya,df_dog))
@@ -105,8 +109,13 @@ def legal_date(message):
 
     #bot.send_message(message.chat.id, (message.text, message.from_user.first_name))
     #bot.send_message(message.chat.id, getwiki(message.text))
+
 def message_button():
     print("OK")
+
+def message_button(message,text):
+    bot.send_message(message.chat.id,f'<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии за смену превышает среднестатистический, более чем в {int(text[1]/text[2])} раза.\n',parse_mode='html')
+
 #print(date_time_otch)
 
 #@bot.message_handler(func=lambda message: True)
