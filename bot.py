@@ -64,8 +64,7 @@ def handle_text(message):
 
     if datetime.date.fromtimestamp(message.date) < datetime.date(2024,5,21):
         bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, показание приборов можно будет отправлять с 01.07.2024\n',parse_mode='html')
-    elif text == "превышение":
-        message_button()
+
 
 
     else:
