@@ -12,6 +12,8 @@ import time
 import datetime
 import locale
 from token1 import token_bot
+import schedule
+import threading
 
 locale.setlocale(locale.LC_ALL, 'Russian_Russia.1251')
 
@@ -23,6 +25,12 @@ print(ls_id)
 
 
 bot = telebot.TeleBot(token_bot)
+
+def start_polling():
+    bot.infinity_polling(none_stop=True)
+
+polling_thread = threading.Thread(target=start_polling)
+polling_thread.start()
 
 
 @bot.message_handler(commands=['start'])
@@ -115,6 +123,20 @@ def message_button():
 def message_button(message,text):
     bot.send_message(message.chat.id,f'<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии за смену превышает среднестатистический, более чем в {int(text[1]/text[2])} раза.\n',parse_mode='html')
 
+# def my_daily_task(tg_id):
+#     print(1)
+#     bot.send_message(tg_id, 'тут будет чота гавгать')
+# schedule.every().day.at("21:47").do(my_daily_task, tg_id=1047877068)
+
+def send_message():
+    bot.send_message(1047877068, 'Привет, как дела?')
+
+# schedule.every().day.at("10:00").do(send_message)
+# schedule.every().day.at("20:00").do(send_message)
+
+# while True:
+#     schedule.run_pending()
+#     time.sleep(1)
 #print(date_time_otch)
 
 #@bot.message_handler(func=lambda message: True)
@@ -132,4 +154,16 @@ def message_button(message,text):
 
 
 
-bot.infinity_polling()
+#bot.infinity_polling()
+
+
+
+#def start_command():
+    #...
+
+schedule.every().day.at("21:58").do(send_message)
+schedule.every().day.at("21:59").do(send_message)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)

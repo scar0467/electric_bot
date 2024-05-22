@@ -1,10 +1,10 @@
 import telebot
 import time
 from datetime import datetime
-from token1 import token_bot_time
-import schedule
+from token1 import token_bot
+#import schedule
 
-bot = telebot.TeleBot( token_bot_time)
+bot = telebot.TeleBot( token_bot)
 #BOT_URL = "URL"
 
 # @bot.message_handler(commands=['start'])
@@ -42,7 +42,7 @@ while True:
         for id in ls:
             bot.send_message(id, f'Текущее время: {current_time}')
 
-    elif current_time == '20:07:00':
+    elif current_time == '20:44:00':
         for id in ls:
             bot.send_message(id, f'Текущее время: {current_time}')
 
