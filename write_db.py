@@ -1,11 +1,9 @@
 from conn import connection
-#import pandas as pd
 import re
 import sqlite3
 import  time
 import locale
-#from bs4 import BeautifulSoup
-#from bot import inf_to_bot
+
 
 
 locale.setlocale(locale.LC_ALL, 'Russian_Russia.1251')
@@ -40,7 +38,6 @@ def write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch):
 
     cursor.execute(f"SELECT Дата, Показание, Расход_за_сутки, Дата_время  FROM '{relevant_table}' ORDER BY `Дата` DESC LIMIT 30")
     available_tables= cursor.fetchall()
-    print(available_tables)
     cursor.close
     try:
         _sum = 0
@@ -54,7 +51,6 @@ def write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch):
     try:
         if date_otch != available_tables[0][0]:
             sutochn=int(pokazaniya) - int(available_tables[0][1])
-            #delta = int(pokazaniya) - int(available_tables[0][1]) - int(available_tables[0][2])
             if sutochn < 1:
                 text=f"""<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии не должен быть меньше или ровняться нулю.
             """
