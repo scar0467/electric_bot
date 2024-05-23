@@ -5,7 +5,7 @@ import re
 #import requests
 import pandas as pd
 from telebot import types
-from write_db import write,num_azs
+from write_db import write,num_azs, write_1
 from conn import connection
 import sqlite3
 import time
@@ -19,9 +19,10 @@ locale.setlocale(locale.LC_ALL, 'Russian_Russia.1251')
 
 
 
-df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
-ls_id = df_dog['Инд_телеграм'].to_list()
-print(ls_id)
+# df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
+# ls_id = [value for value in df_dog['Инд_телеграм'].to_list() if value]
+# print(ls_id)
+
 
 
 bot = telebot.TeleBot(token_bot)
@@ -35,6 +36,7 @@ polling_thread.start()
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
+    global ls_id
     print(num_azs(message.from_user.first_name))
     try:
         connection
@@ -43,8 +45,9 @@ def start_message(message):
                     SET Инд_телеграм = {message.chat.id}
                     WHERE Номер_АЗС = {num_azs(message.from_user.first_name)} AND Инд_телеграм = '';""")
         connection.commit()
+        cursor.close
         df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
-        ls_id = df_dog['Инд_телеграм'].to_list()
+        ls_id = [value for value in df_dog['Инд_телеграм'].to_list() if value]
         print(ls_id)
         if str(message.from_user.id) in ls_id:
             bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно.\n',parse_mode='html')
@@ -80,6 +83,7 @@ def handle_text(message):
 
 
 def legal_date(message):
+    global name_user,id_user,pokazaniya,date_otch,date_time_otch
     df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
     ls_id = df_dog['Инд_телеграм'].to_list()
     #bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно. Можете отправлять показания счётчика\n',parse_mode='html')
@@ -93,17 +97,21 @@ def legal_date(message):
         print(name_user,id_user,pokazaniya,date_otch,date_time_otch)
         text=write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch)
         print(text)
-        if text[0]=="подтверждение":
+        if text[0]=='подтверждение':
             message_button(message,text)
+        elif text=='0':
+            bot.send_message(message.chat.id,f"""<b>{message.from_user.first_name}</b>, показания прибора учёта приняты.
+    В дальнешем, когда у меня будет больше информации, в ответ на ваше сообщение я буду отправлять вам информацию о количестве кВт израсходованных за смену и
+    инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии в сравнение с предыдущей сменой.\n""",parse_mode='html')
         else:
-            try:
+            #try:
                 bot.send_message(message.chat.id,text,parse_mode='html')
 
-            except telebot.apihelper.ApiTelegramException:
+    #          except telebot.apihelper.ApiTelegramException:
 
-                bot.send_message(message.chat.id,f"""<b>{message.from_user.first_name}</b>,
-    в дальнешем, когда у меня будет больше информации, в ответ на Ваше сообщение я буду отправлять Вам информацию о количестве кВт израсходованных за смену и
-    инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии в сравнение с предыдущей сменой.\n""",parse_mode='html')
+    #              bot.send_message(message.chat.id,f"""<b>{message.from_user.first_name}</b>,
+    # в дальнешем, когда у меня будет больше информации, в ответ на Ваше сообщение я буду отправлять Вам информацию о количестве кВт израсходованных за смену и
+    # инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии в сравнение с предыдущей сменой.\n""",parse_mode='html')
 
         #write(name_user,id_user,pokazaniya,df_dog)
         #inf_to_bot(write(name_user,id_user,pokazaniya,df_dog))
@@ -117,11 +125,36 @@ def legal_date(message):
     #bot.send_message(message.chat.id, (message.text, message.from_user.first_name))
     #bot.send_message(message.chat.id, getwiki(message.text))
 
-def message_button():
-    print("OK")
+# def message_button():
+#     print("OK")
 
 def message_button(message,text):
-    bot.send_message(message.chat.id,f'<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии за смену превышает среднестатистический, более чем в {int(text[1]/text[2])} раза.\n',parse_mode='html')
+    keyboard = types.InlineKeyboardMarkup()
+    callback_button = types.InlineKeyboardButton(text="Всё равно продолжить", callback_data="test")
+    keyboard.add(callback_button)
+    try:
+       bot.send_message(message.chat.id,f'<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии за смену превышает среднестатистический, более чем в {int(text[1]/text[2])} раза.\n',parse_mode='html',reply_markup=keyboard)
+    except ZeroDivisionError:
+        bot.send_message(message.chat.id,f'<b>Показания приняты</b>',parse_mode='html')
+        write_1()
+
+    #if call.message:
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    try:
+        text=write_1()
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text,parse_mode='html')
+
+    except telebot.apihelper.ApiTelegramException:
+        pass
+    # Если сообщение из чата с ботом
+    # if call.message:
+    #     if call.data == "test":
+    #         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
+        # elif call.inline_message_id:
+        #     if call.data == "test":
+        #         bot.edit_message_text(inline_message_id=call.inline_message_id, text="Бдыщь")
 
 # def my_daily_task(tg_id):
 #     print(1)
@@ -129,7 +162,19 @@ def message_button(message,text):
 # schedule.every().day.at("21:47").do(my_daily_task, tg_id=1047877068)
 
 def send_message():
-    bot.send_message(1047877068, 'Привет, как дела?')
+    df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
+    ls_id = [value for value in df_dog['Инд_телеграм'].to_list() if value]
+    for i in ls_id:
+        bot.send_message(i, 'Не забудьте до 09:00 передать показания приборов учёта электроэнергии')
+
+def no_data():
+    tables = pd.read_sql_query("SELECT * FROM sqlite_master WHERE type='table';", connection)
+    print(tables)
+    for table in tables['tbl_name'][1::]:
+        print(table)
+        data=pd.read_sql_query(f"SELECT 'Объект' FROM '{table}' WHERE Дата != '{time.strftime('%x')}'", connection)
+        #data=pd.read_sql_query(f"SELECT Объект FROM '{table}' WHERE Дата != '{datetime.date.('now')}'", connection)
+        print(data)
 
 # schedule.every().day.at("10:00").do(send_message)
 # schedule.every().day.at("20:00").do(send_message)
@@ -159,11 +204,19 @@ def send_message():
 
 
 #def start_command():
+
     #...
+if __name__ == '__main__':
 
-schedule.every().day.at("21:58").do(send_message)
-schedule.every().day.at("21:59").do(send_message)
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+    def start_polling():
+        bot.infinity_polling(none_stop=True)
+
+        polling_thread = threading.Thread(target=start_polling)
+        polling_thread.start()
+    schedule.every().day.at("15:45").do(send_message)
+    schedule.every().day.at("16:12").do(no_data)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
