@@ -1,28 +1,16 @@
 import telebot
-import os
-import re
-#import script
-#import requests
 import pandas as pd
 from telebot import types
 from write_db import write,num_azs, write_1
 from conn import connection
-import sqlite3
 import time
 import datetime
 import locale
-from token1 import token_bot
+from token1 import token_bot, id_support
 import schedule
 import threading
 
 locale.setlocale(locale.LC_ALL, 'Russian_Russia.1251')
-
-
-
-# df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
-# ls_id = [value for value in df_dog['Инд_телеграм'].to_list() if value]
-# print(ls_id)
-
 
 
 bot = telebot.TeleBot(token_bot)
@@ -37,7 +25,6 @@ polling_thread.start()
 @bot.message_handler(commands=['start'])
 def start_message(message):
     global ls_id
-    print(num_azs(message.from_user.first_name))
     try:
         connection
         cursor=connection.cursor()
@@ -48,36 +35,20 @@ def start_message(message):
         cursor.close
         df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
         ls_id = [value for value in df_dog['Инд_телеграм'].to_list() if value]
-        print(ls_id)
         if str(message.from_user.id) in ls_id:
             bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно.\n',parse_mode='html')
         else:
             bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Ваш аккаунт не авторизован. Вход запрещён\n',parse_mode='html')
     except IndexError: #sqlite3.OperationalError:
-        bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация запрещена. <i>%%%ОШИБКА#<b>1</b>%%%%</i>\n',parse_mode='html')
-
-    # df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
-    # ls_id = df_dog['Инд_телеграм'].to_list()
-    # print(ls_id)
-
-    # if str(message.from_user.id) in ls_id:
-    #         bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно. Можете отправлять показания счётчика\n',parse_mode='html')
-    #         bot.register_next_step_handler(message,handle_text)
-    # else:
-    #     bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Ваш аккаунт не авторизован. Вход запрещён\n',parse_mode='html')
-
+        bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация запрещена.\n',parse_mode='html')
 
 
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
     global text
 
-
-    if datetime.date.fromtimestamp(message.date) < datetime.date(2024,5,21):
-        bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, показание приборов можно будет отправлять с 01.07.2024\n',parse_mode='html')
-
-
-
+    if datetime.date.fromtimestamp(message.date) < datetime.date(2024,5,22):
+        bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, показание приборов можно будет отправлять с 25.05.2024\n',parse_mode='html')
     else:
         legal_date(message)
 
@@ -86,47 +57,26 @@ def legal_date(message):
     global name_user,id_user,pokazaniya,date_otch,date_time_otch
     df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
     ls_id = df_dog['Инд_телеграм'].to_list()
-    #bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно. Можете отправлять показания счётчика\n',parse_mode='html')
-    if str(message.from_user.id) in ls_id:
-        name_user = message.from_user.first_name
-        id_user = message.from_user.id
-        pokazaniya = round(float(message.text.replace(',','.')),1)
-        date_otch=time.strftime('%d.%m.%Y',time.localtime(message.date))
-        date_time_otch=time.strftime('%d.%m.%Y %H:%M:%S',time.localtime(message.date))
-
-        print(name_user,id_user,pokazaniya,date_otch,date_time_otch)
-        text=write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch)
-        print(text)
-        if text[0]=='подтверждение':
-            message_button(message,text)
-        elif text=='0':
-            bot.send_message(message.chat.id,f"""<b>{message.from_user.first_name}</b>, показания прибора учёта приняты.
-    В дальнешем, когда у меня будет больше информации, в ответ на ваше сообщение я буду отправлять вам информацию о количестве кВт израсходованных за смену и
-    инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии в сравнение с предыдущей сменой.\n""",parse_mode='html')
-        else:
-            #try:
+    try:
+        if str(message.from_user.id) in ls_id:
+            name_user = message.from_user.first_name
+            id_user = message.from_user.id
+            pokazaniya = round(float(message.text.replace(',','.')),1)
+            date_otch=time.strftime('%d.%m.%Y',time.localtime(message.date))
+            date_time_otch=time.strftime('%d.%m.%Y %H:%M:%S',time.localtime(message.date))
+            text=write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch)
+            if text[0]=='подтверждение':
+                message_button(message,text)
+            elif text=='0':
+                bot.send_message(message.chat.id,f"""<b>{message.from_user.first_name}</b>, показания прибора учёта приняты.
+        В дальнейшем, когда у меня будет больше информации, в ответ на ваше сообщение я буду отправлять вам информацию о количестве кВт израсходованных за смену и
+        инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии в сравнение с предыдущей сменой.\n""",parse_mode='html')
+            else:
                 bot.send_message(message.chat.id,text,parse_mode='html')
-
-    #          except telebot.apihelper.ApiTelegramException:
-
-    #              bot.send_message(message.chat.id,f"""<b>{message.from_user.first_name}</b>,
-    # в дальнешем, когда у меня будет больше информации, в ответ на Ваше сообщение я буду отправлять Вам информацию о количестве кВт израсходованных за смену и
-    # инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии в сравнение с предыдущей сменой.\n""",parse_mode='html')
-
-        #write(name_user,id_user,pokazaniya,df_dog)
-        #inf_to_bot(write(name_user,id_user,pokazaniya,df_dog))
-        #bot.register_next_step_handler(message,second_message)
-
-
-    #bot.send_message(message.chat.id,message)
-    else:
-        bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, Вы не авторизованы. Вы не можете отправлять сообщения боту\n',parse_mode='html')
-
-    #bot.send_message(message.chat.id, (message.text, message.from_user.first_name))
-    #bot.send_message(message.chat.id, getwiki(message.text))
-
-# def message_button():
-#     print("OK")
+        else:
+            bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, Вы не авторизованы. Вы не можете отправлять сообщения боту\n',parse_mode='html')
+    except ValueError:
+        bot.send_message(message.chat.id,f'<b>Введённые показания не должны содержать: буквы, знаки препинания, символы и не должны начинаться с ноля. Только цифры</b>\n',parse_mode='html')
 
 def message_button(message,text):
     keyboard = types.InlineKeyboardMarkup()
@@ -138,8 +88,6 @@ def message_button(message,text):
         bot.send_message(message.chat.id,f'<b>Показания приняты</b>',parse_mode='html')
         write_1()
 
-    #if call.message:
-
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     try:
@@ -148,18 +96,6 @@ def callback_inline(call):
 
     except telebot.apihelper.ApiTelegramException:
         pass
-    # Если сообщение из чата с ботом
-    # if call.message:
-    #     if call.data == "test":
-    #         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
-        # elif call.inline_message_id:
-        #     if call.data == "test":
-        #         bot.edit_message_text(inline_message_id=call.inline_message_id, text="Бдыщь")
-
-# def my_daily_task(tg_id):
-#     print(1)
-#     bot.send_message(tg_id, 'тут будет чота гавгать')
-# schedule.every().day.at("21:47").do(my_daily_task, tg_id=1047877068)
 
 def send_message():
     df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
@@ -169,53 +105,27 @@ def send_message():
 
 def no_data():
     tables = pd.read_sql_query("SELECT * FROM sqlite_master WHERE type='table';", connection)
-    print(tables)
+    ls_no_data=()
+    connection
+    cursor=connection.cursor()
     for table in tables['tbl_name'][1::]:
         print(table)
-        data=pd.read_sql_query(f"SELECT 'Объект' FROM '{table}' WHERE Дата != '{time.strftime('%x')}'", connection)
-        #data=pd.read_sql_query(f"SELECT Объект FROM '{table}' WHERE Дата != '{datetime.date.('now')}'", connection)
-        print(data)
-
-# schedule.every().day.at("10:00").do(send_message)
-# schedule.every().day.at("20:00").do(send_message)
-
-# while True:
-#     schedule.run_pending()
-#     time.sleep(1)
-#print(date_time_otch)
-
-#@bot.message_handler(func=lambda message: True)
-# def inf_to_bot(r):
-#     global text
-#     text=r
-
-#print(r)
-
-# @bot.message_handler(content_types=["text"])
-# def second_message(message):
-#     print(22)
-
-#     bot.send_message(message.chat.id,text)
+        cursor.execute(f"SELECT Дата FROM '{table}'WHERE Дата == '{time.strftime('%x')}' ORDER BY `Дата` DESC LIMIT 1")
+        data= cursor.fetchall()
+        if data == []:
+            ls_no_data += (table,)
+        bot.send_message(id_support, ls_no_data)
+    cursor.close
 
 
-
-#bot.infinity_polling()
-
-
-
-#def start_command():
-
-    #...
 if __name__ == '__main__':
-
-
     def start_polling():
         bot.infinity_polling(none_stop=True)
 
         polling_thread = threading.Thread(target=start_polling)
         polling_thread.start()
     schedule.every().day.at("15:45").do(send_message)
-    schedule.every().day.at("16:12").do(no_data)
+    schedule.every().day.at("19:00").do(no_data)
 
     while True:
         schedule.run_pending()
