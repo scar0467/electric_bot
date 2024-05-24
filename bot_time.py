@@ -16,14 +16,14 @@ bot = telebot.TeleBot( token_bot)
 # current_time = now.strftime("%H:%M")
 
 # # def job():
-# #    bot.send_message(4237474377, ' Привет')
+# #    bot.send_message(, ' Привет')
 
 # # schedule.every(10).seconds.do(job)
 # # while True:
 # #    schedule.run_pending()
 # #    time.sleep(1)
-ls=[1047877068 ,6402335526,6456585499]
-#ls=[1047877068 'мой',6402335526 'тех.под',6456585499 'тест АЗС94']
+ls=
+#ls=
 
 
 #Запускаем цикл для проверки времени
