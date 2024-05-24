@@ -37,6 +37,7 @@ def start_message(message):
         ls_id = [value for value in df_dog['Инд_телеграм'].to_list() if value]
         if str(message.from_user.id) in ls_id:
             bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно.\n',parse_mode='html')
+            bot.send_message(id_support, f'<b>{message.from_user.first_name}</b>, авторизовался',parse_mode='html')
         else:
             bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Ваш аккаунт не авторизован. Вход запрещён\n',parse_mode='html')
     except IndexError: #sqlite3.OperationalError:
@@ -70,13 +71,13 @@ def legal_date(message):
             elif text=='0':
                 bot.send_message(message.chat.id,f"""<b>{message.from_user.first_name}</b>, показания прибора учёта приняты.
         В дальнейшем, когда у меня будет больше информации, в ответ на ваше сообщение я буду отправлять вам информацию о количестве кВт израсходованных за смену и
-        инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии в сравнение с предыдущей сменой.\n""",parse_mode='html')
+        инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии по сравнению с предыдущей сменой.\n""",parse_mode='html')
             else:
                 bot.send_message(message.chat.id,text,parse_mode='html')
         else:
             bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, Вы не авторизованы. Вы не можете отправлять сообщения боту\n',parse_mode='html')
     except ValueError:
-        bot.send_message(message.chat.id,f'<b>Введённые показания не должны содержать: буквы, знаки препинания, символы и не должны начинаться с ноля. Только цифры</b>\n',parse_mode='html')
+        bot.send_message(message.chat.id,f'<b>Введённые показания не должны содержать буквы и символы. Только цифры.</b>\n',parse_mode='html')
 
 def message_button(message,text):
     keyboard = types.InlineKeyboardMarkup()
@@ -114,7 +115,10 @@ def no_data():
         data= cursor.fetchall()
         if data == []:
             ls_no_data += (table,)
-        bot.send_message(id_support, ls_no_data)
+        try:
+           bot.send_message(id_support, ls_no_data)
+        except:
+            bot.send_message(id_support, "Все передали")
     cursor.close
 
 
@@ -124,8 +128,9 @@ if __name__ == '__main__':
 
         polling_thread = threading.Thread(target=start_polling)
         polling_thread.start()
-    schedule.every().day.at("15:45").do(send_message)
-    schedule.every().day.at("19:00").do(no_data)
+    schedule.every().day.at("08:00").do(send_message)
+    schedule.every().day.at("09:15").do(no_data)
+    #schedule.every().day.at("10:25").do(no_data)
 
     while True:
         schedule.run_pending()
