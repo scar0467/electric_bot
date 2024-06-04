@@ -38,6 +38,7 @@ def write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch):
 
     cursor.execute(f"SELECT Дата, Показание, Расход_за_сутки, Дата_время  FROM '{relevant_table}' ORDER BY `Дата` DESC LIMIT 30")
     available_tables= cursor.fetchall()
+    print(available_tables)
     cursor.close
     try:
         _sum = 0
@@ -50,18 +51,29 @@ def write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch):
     r=0
     try:
         if date_otch != available_tables[0][0]:
-            sutochn=int(pokazaniya) - int(available_tables[0][1])
-            if sutochn < 1:
-                text=f"""<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии не должен быть меньше или ровняться нулю.
+            if relevant_table == '74070751005027_Усть-Катав, Заводская':
+                sutochn=int(pokazaniya)*0.02 - int(available_tables[0][1])*0.02
+                if sutochn < 1:
+                   text=f"""<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии не должен быть меньше или ровняться нулю.
             """
-                return text
-            elif sutochn > median * 2:
-                text = "подтверждение"
-                return text, sutochn, median
-            return write_1()
+                   return text
+                elif sutochn > median * 2:
+                   text = "подтверждение"
+                   return text, sutochn, median
+                return write_1()
+            else:
+                sutochn=int(pokazaniya) - int(available_tables[0][1])
+                if sutochn < 1:
+                    text=f"""<b>Проверьте правильность введённых данных</b>\nРасход электроэнергии не должен быть меньше или ровняться нулю.
+                """
+                    return text
+                elif sutochn > median * 2:
+                    text = "подтверждение"
+                    return text, sutochn, median
+                return write_1()
 
         elif date_otch == available_tables[0][0]:
-            text=f'Показание за эту дату передавались {available_tables[0][0]}'
+            text=f'Показание за смену передавались {available_tables[0][3]}'
             return text
 
     except IndexError:
@@ -85,13 +97,13 @@ def write_1():
     инфрмацию о том, на сколько больше или меньше было израсходовано электроэнергии в сравнение с предыдущей сменой.\n"""
             return text
         if sutochn <= int(available_tables[0][2]):
-            text=f"""<b>Информация по расходу эл.энергии</b>
+            text=f"""<b>ПОКАЗАНИЯ ПРИНЯТЫ</b>\n<b>Информация по расходу эл.энергии</b>
         Израсходовано э/э за смену - <b>{sutochn} кВт/ч</b>
         что на <b>{procent-procent*2}%</b> меньше чем расход  за предыдущую смену."""
             return text
 
         elif sutochn > int(available_tables[0][2]):
-            text=(f"""<b>Информация по расходу эл.энергии</b>
+            text=(f"""<b>ПОКАЗАНИЯ ПРИНЯТЫ</b>\n<b>Информация по расходу эл.энергии</b>
         Израсходовано э/э за смену - <b>{sutochn} кВт/ч,</b>
         что на <b>{procent}%</b> больше чем расход  за предыдущую смену.""")
             return text

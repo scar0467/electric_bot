@@ -30,13 +30,13 @@ def start_message(message):
         cursor=connection.cursor()
         cursor.execute(f"""UPDATE Договор
                     SET Инд_телеграм = {message.chat.id}
-                    WHERE Номер_АЗС = {num_azs(message.from_user.first_name)} AND Инд_телеграм = '';""")
+                    WHERE Номер_АЗС = '{num_azs(message.from_user.first_name)}' AND Инд_телеграм = '';""")
         connection.commit()
         cursor.close
         df_dog = pd.read_sql_query("SELECT Номер_договора,Номер_АЗС, Объект, Плательщик, Способ, Инд_телеграм  FROM Договор", connection)
         ls_id = [value for value in df_dog['Инд_телеграм'].to_list() if value]
         if str(message.from_user.id) in ls_id:
-            bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно.\n',parse_mode='html')
+            bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Авторизация прошла успешно. Можете передать показания\n',parse_mode='html')
             bot.send_message(id_support, f'<b>{message.from_user.first_name}</b>, авторизовался',parse_mode='html')
         else:
             bot.send_message(message.chat.id,f'<b>{message.from_user.first_name}</b>, здравствуйте! Ваш аккаунт не авторизован. Вход запрещён\n',parse_mode='html')
@@ -46,6 +46,7 @@ def start_message(message):
 
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
+    #print(message)
     global text
 
     if datetime.date.fromtimestamp(message.date) < datetime.date(2024,5,22):
@@ -63,7 +64,7 @@ def legal_date(message):
             name_user = message.from_user.first_name
             id_user = message.from_user.id
             pokazaniya = round(float(message.text.replace(',','.')),1)
-            date_otch=time.strftime('%d.%m.%Y',time.localtime(message.date))
+            date_otch=time.strftime('%Y.%m.%d',time.localtime(message.date))
             date_time_otch=time.strftime('%d.%m.%Y %H:%M:%S',time.localtime(message.date))
             text=write(name_user,id_user,pokazaniya,df_dog,date_otch,date_time_otch)
             if text[0]=='подтверждение':
@@ -111,12 +112,13 @@ def no_data():
     cursor=connection.cursor()
     for table in tables['tbl_name'][1::]:
         print(table)
-        cursor.execute(f"SELECT Дата FROM '{table}'WHERE Дата == '{time.strftime('%x')}' ORDER BY `Дата` DESC LIMIT 1")
+        cursor.execute(f"SELECT Дата FROM '{table}'WHERE Дата == '{time.strftime('%Y.%m.%d',time.localtime())}' ORDER BY `Дата` DESC LIMIT 1")
         data= cursor.fetchall()
         if data == []:
             ls_no_data += (table,)
         try:
            bot.send_message(id_support, ls_no_data)
+           ls_no_data=()
         except:
             bot.send_message(id_support, "Все передали")
     cursor.close
